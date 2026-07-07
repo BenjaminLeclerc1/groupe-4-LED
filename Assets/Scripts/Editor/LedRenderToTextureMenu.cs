@@ -35,7 +35,7 @@ namespace LedShow.Editor
             serializedSource.FindProperty("sourceCamera").objectReferenceValue = camera;
             serializedSource.ApplyModifiedProperties();
 
-            var existingDisplay = Object.FindFirstObjectByType<LedSimulatorDisplay>();
+            var existingDisplay = Object.FindAnyObjectByType<LedSimulatorDisplay>();
             if (existingDisplay != null)
             {
                 var serializedDisplay = new SerializedObject(existingDisplay);

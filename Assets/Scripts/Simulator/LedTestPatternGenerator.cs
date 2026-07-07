@@ -14,7 +14,7 @@ namespace LedShow.Simulator
     // Fakes a "state" so the simulator and (later) the ArtNet sender have something
     // to display/send before the real render-to-texture pipeline (INFRA-03) exists.
     [ExecuteAlways]
-    public class LedTestPatternGenerator : MonoBehaviour
+    public class LedTestPatternGenerator : MonoBehaviour, ILedStateSource
     {
         [SerializeField] private int width = 32;
         [SerializeField] private int height = 18;

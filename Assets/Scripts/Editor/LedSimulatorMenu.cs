@@ -10,8 +10,13 @@ namespace LedShow.Editor
         public static void CreateSimulator()
         {
             var go = new GameObject("LED Simulator");
-            go.AddComponent<LedTestPatternGenerator>();
-            go.AddComponent<LedSimulatorDisplay>();
+            var patternGenerator = go.AddComponent<LedTestPatternGenerator>();
+            var display = go.AddComponent<LedSimulatorDisplay>();
+
+            var serializedDisplay = new SerializedObject(display);
+            serializedDisplay.FindProperty("stateSourceBehaviour").objectReferenceValue = patternGenerator;
+            serializedDisplay.ApplyModifiedProperties();
+
             Selection.activeGameObject = go;
         }
     }

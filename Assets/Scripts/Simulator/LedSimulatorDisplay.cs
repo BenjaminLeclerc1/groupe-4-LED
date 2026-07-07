@@ -1,22 +1,34 @@
 using UnityEngine;
+using LedShow.Core;
 
 namespace LedShow.Simulator
 {
     // Renders a LedState onto a quad so the LED wall can be previewed inside the
     // Unity editor/Game view without any physical hardware connected.
+    //
+    // Depends only on ILedStateSource, not on LedTestPatternGenerator directly:
+    // any producer (fake patterns today, render-to-texture tomorrow) can be
+    // plugged in here without touching this class.
     [ExecuteAlways]
-    [RequireComponent(typeof(LedTestPatternGenerator))]
     public class LedSimulatorDisplay : MonoBehaviour
     {
+        [Tooltip("Any component implementing ILedStateSource (e.g. LedTestPatternGenerator, LedRenderToTextureSource).")]
+        [SerializeField] private MonoBehaviour stateSourceBehaviour;
+
         private const string QuadName = "LedSimulatorQuad";
 
-        private LedTestPatternGenerator source;
+        private ILedStateSource source;
         private Texture2D texture;
         private MeshRenderer quadRenderer;
 
         private void OnEnable()
         {
-            source = GetComponent<LedTestPatternGenerator>();
+            source = stateSourceBehaviour as ILedStateSource;
+            if (stateSourceBehaviour != null && source == null)
+            {
+                Debug.LogError($"{nameof(LedSimulatorDisplay)}: '{stateSourceBehaviour.name}' does not implement ILedStateSource.", this);
+            }
+
             BuildQuad();
         }
 
@@ -43,8 +55,13 @@ namespace LedShow.Simulator
 
         private void Update()
         {
+            if (source == null || quadRenderer == null)
+            {
+                return;
+            }
+
             var state = source.State;
-            if (state == null || quadRenderer == null)
+            if (state == null)
             {
                 return;
             }

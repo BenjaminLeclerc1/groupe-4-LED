@@ -17,14 +17,12 @@ namespace LedShow.Simulator
 
         private const string QuadName = "LedSimulatorQuad";
 
-        private ILedStateSource source;
         private Texture2D texture;
         private MeshRenderer quadRenderer;
 
         private void OnEnable()
         {
-            source = stateSourceBehaviour as ILedStateSource;
-            if (stateSourceBehaviour != null && source == null)
+            if (stateSourceBehaviour != null && !(stateSourceBehaviour is ILedStateSource))
             {
                 Debug.LogError($"{nameof(LedSimulatorDisplay)}: '{stateSourceBehaviour.name}' does not implement ILedStateSource.", this);
             }
@@ -55,6 +53,11 @@ namespace LedShow.Simulator
 
         private void Update()
         {
+            // Read the interface fresh every frame rather than caching it in OnEnable:
+            // caching it meant a source wired up right after AddComponent (as our
+            // "LED Show > Create ..." menus do) could be missed, since OnEnable runs
+            // before the field assignment lands.
+            var source = stateSourceBehaviour as ILedStateSource;
             if (source == null || quadRenderer == null)
             {
                 return;

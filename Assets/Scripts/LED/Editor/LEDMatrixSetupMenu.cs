@@ -103,6 +103,8 @@ public static class LEDMatrixSetupMenu
         serializedSimulator.FindProperty("sourceTexture").objectReferenceValue = sprite;
         serializedSimulator.FindProperty("uiPreview").objectReferenceValue = rawImage;
         serializedSimulator.FindProperty("wallPanel").objectReferenceValue = panelRenderer;
+        serializedSimulator.FindProperty("show3DWallPanel").boolValue = false;
+        serializedSimulator.FindProperty("showUiOverlay").boolValue = true;
         serializedSimulator.FindProperty("clearToBlack").boolValue = true;
         serializedSimulator.FindProperty("showLedGrid").boolValue = true;
         serializedSimulator.ApplyModifiedPropertiesWithoutUndo();

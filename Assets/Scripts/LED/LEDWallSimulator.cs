@@ -11,12 +11,16 @@ public class LEDWallSimulator : MonoBehaviour
     [SerializeField] bool clearToBlack = true;
 
     [Header("Preview")]
+    [SerializeField] bool show3DWallPanel;
+    [SerializeField] bool showUiOverlay = true;
     [SerializeField] bool showLedGrid = true;
     [SerializeField] float ledGap = 0.14f;
     [SerializeField] RawImage uiPreview;
     [SerializeField] Renderer wallPanel;
 
     readonly LEDWallBuffer _buffer = new();
+    Material _panelMaterial;
+    Material _uiMaterial;
 
     public Texture2D SourceTexture => sourceTexture;
     public Texture2D MatrixTexture => _buffer.Texture;
@@ -26,12 +30,16 @@ public class LEDWallSimulator : MonoBehaviour
     {
         if (ShouldAutoRefresh())
             Refresh();
+        else
+            UpdatePreviews();
     }
 
     void OnValidate()
     {
         if (ShouldAutoRefresh())
             Refresh();
+        else
+            UpdatePreviews();
     }
 
     bool ShouldAutoRefresh()
@@ -92,41 +100,95 @@ public class LEDWallSimulator : MonoBehaviour
 
     public void UpdatePreviews()
     {
-        if (_buffer.Texture == null)
+        EnsureDisplayTexture();
+        var texture = _buffer.Texture;
+
+        UpdatePanelPreview(texture);
+        UpdateUiPreview(texture);
+    }
+
+    void EnsureDisplayTexture()
+    {
+        if (_buffer.Texture != null)
             return;
 
-        if (uiPreview != null)
-            uiPreview.texture = _buffer.Texture;
+        _buffer.EnsureTexture();
+        _buffer.ClearPixels(Color.black);
+        _buffer.Apply();
+    }
 
+    void UpdatePanelPreview(Texture2D texture)
+    {
         if (wallPanel == null)
             return;
 
-        EnsureWallMaterial();
-        LEDTextureUtility.ApplyToRenderer(wallPanel, _buffer.Texture);
-
-        var material = wallPanel.sharedMaterial;
-        if (material == null)
+        wallPanel.enabled = show3DWallPanel;
+        if (!show3DWallPanel)
             return;
 
-        if (material.HasProperty("_GridSize"))
-            material.SetFloat("_GridSize", LEDWallConfig.VisibleWidth);
-
-        if (material.HasProperty("_Gap"))
-            material.SetFloat("_Gap", showLedGrid ? ledGap : 0f);
+        var material = GetPanelMaterial();
+        LEDWallMaterialUtility.ApplyGridSettings(material, showLedGrid, ledGap);
+        LEDWallMaterialUtility.ApplyTexture(material, texture);
+        wallPanel.sharedMaterial = material;
     }
 
-    void EnsureWallMaterial()
+    void UpdateUiPreview(Texture2D texture)
     {
-        var shader = Shader.Find("LED/LEDWallGrid");
-        if (shader == null)
-            shader = Shader.Find("Universal Render Pipeline/Unlit");
+        if (uiPreview == null)
+            return;
 
-        if (wallPanel.sharedMaterial == null || wallPanel.sharedMaterial.shader != shader)
-            wallPanel.sharedMaterial = new Material(shader);
+        uiPreview.gameObject.SetActive(showUiOverlay);
+        if (!showUiOverlay)
+            return;
+
+        uiPreview.texture = texture;
+
+        if (!showLedGrid)
+        {
+            uiPreview.material = null;
+            return;
+        }
+
+        var material = GetUiMaterial();
+        LEDWallMaterialUtility.ApplyGridSettings(material, true, ledGap);
+        LEDWallMaterialUtility.ApplyTexture(material, texture);
+        uiPreview.material = material;
+    }
+
+    Material GetPanelMaterial()
+    {
+        if (_panelMaterial == null || !LEDWallMaterialUtility.IsLedWallShader(_panelMaterial.shader))
+            _panelMaterial = LEDWallMaterialUtility.CreatePanelMaterial();
+
+        return _panelMaterial;
+    }
+
+    Material GetUiMaterial()
+    {
+        if (_uiMaterial == null || !LEDWallMaterialUtility.IsLedWallShader(_uiMaterial.shader))
+            _uiMaterial = LEDWallMaterialUtility.CreatePanelMaterial();
+
+        return _uiMaterial;
     }
 
     void OnDestroy()
     {
         _buffer.Destroy();
+
+        if (_panelMaterial != null)
+        {
+            if (Application.isPlaying)
+                Destroy(_panelMaterial);
+            else
+                DestroyImmediate(_panelMaterial);
+        }
+
+        if (_uiMaterial != null)
+        {
+            if (Application.isPlaying)
+                Destroy(_uiMaterial);
+            else
+                DestroyImmediate(_uiMaterial);
+        }
     }
 }

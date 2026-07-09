@@ -167,13 +167,7 @@ public static class LEDWallSceneBuilder
         panelObject.transform.localScale = new Vector3(size, size, 1f);
 
         var renderer = panelObject.GetComponent<MeshRenderer>();
-        var shader = Shader.Find("LED/LEDWallGrid");
-        if (shader == null)
-            shader = Shader.Find("Universal Render Pipeline/Unlit");
-
-        if (renderer.sharedMaterial == null || renderer.sharedMaterial.shader != shader)
-            renderer.sharedMaterial = new Material(shader);
-
+        renderer.sharedMaterial = LEDWallMaterialUtility.CreatePanelMaterial();
         return renderer;
     }
 
@@ -277,11 +271,13 @@ public static class LEDWallSceneBuilder
             previewObject = previewTransform.gameObject;
         }
 
+        previewObject.SetActive(true);
+
         var rectTransform = previewObject.GetComponent<RectTransform>();
-        rectTransform.anchorMin = new Vector2(1f, 0.5f);
-        rectTransform.anchorMax = new Vector2(1f, 0.5f);
-        rectTransform.pivot = new Vector2(1f, 0.5f);
-        rectTransform.anchoredPosition = new Vector2(-24f, 0f);
+        rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        rectTransform.anchoredPosition = Vector2.zero;
         rectTransform.sizeDelta = new Vector2(
             LEDWallConfig.VisibleWidth * UiPreviewPixelSize,
             LEDWallConfig.VisibleHeight * UiPreviewPixelSize);

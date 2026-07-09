@@ -22,7 +22,7 @@ public class SkiDescentGame : MonoBehaviour
     [SerializeField] int playerColumn = 22;
     [SerializeField] float minObstacleSpacing = 42f;
     [SerializeField] float maxObstacleSpacing = 78f;
-    [SerializeField] bool runInEditMode;
+    [SerializeField] bool animateInEditMode;
 
     LEDWallSimulator _wall;
     SpritePixelData _skier;
@@ -94,7 +94,7 @@ public class SkiDescentGame : MonoBehaviour
 
         if (!Application.isPlaying)
         {
-            if (runInEditMode)
+            if (animateInEditMode)
             {
                 _scrollOffset += runSpeed * 0.02f;
                 RenderFrame();

@@ -262,6 +262,8 @@ MonoBehaviour:
   sourceTexture: {fileID: 2800000, guid: 7c4e9f2a8b1d3e6f4a5c8b9d0e1f2a3b, type: 3}
   spritePosition: {x: -1, y: -1}
   clearToBlack: 1
+  show3DWallPanel: 0
+  showUiOverlay: 1
   showLedGrid: 1
   ledGap: 0.14
   uiPreview: {fileID: 1200000044}
@@ -285,7 +287,7 @@ MonoBehaviour:
   playerColumn: 22
   minObstacleSpacing: 42
   maxObstacleSpacing: 78
-  runInEditMode: 1
+  animateInEditMode: 1
 --- !u!1 &1200000011
 GameObject:
   m_ObjectHideFlags: 0
@@ -303,7 +305,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1200000012
 Transform:
   m_ObjectHideFlags: 0
@@ -387,7 +389,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1200000022
 Transform:
   m_ObjectHideFlags: 0
@@ -431,7 +433,7 @@ RectTransform:
   m_GameObject: {fileID: 1200000031}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1200000042}
@@ -537,11 +539,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1200000032}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0.5}
-  m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -24, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 640, y: 640}
-  m_Pivot: {x: 1, y: 0.5}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1200000043
 CanvasRenderer:
   m_ObjectHideFlags: 0

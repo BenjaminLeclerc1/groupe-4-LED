@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using UnityEngine;
 
 namespace LedShow.Routing
 {
@@ -17,6 +18,12 @@ namespace LedShow.Routing
         // numbers wrap from 1 to 255, never touching 0.
         private byte sequence = 1;
 
+        // Tracks whether the last send failed so we log a state change once
+        // (e.g. controller unreachable) instead of spamming an exception every
+        // frame - this happens routinely during development when the target
+        // network (e.g. the wall's controllers) simply isn't reachable yet.
+        private bool lastSendFailed;
+
         public ArtNetSender(string targetIp, int port = ArtNetPacket.Port)
         {
             client = new UdpClient();
@@ -26,7 +33,26 @@ namespace LedShow.Routing
         public void SendUniverse(ushort universe, byte[] dmxData, int dmxLength)
         {
             int packetLength = ArtNetPacket.WriteArtDmx(sendBuffer, universe, sequence, dmxData, dmxLength);
-            client.Send(sendBuffer, packetLength, endpoint);
+
+            try
+            {
+                client.Send(sendBuffer, packetLength, endpoint);
+                if (lastSendFailed)
+                {
+                    Debug.Log($"ArtNetSender: envoi vers {endpoint.Address} retabli.");
+                    lastSendFailed = false;
+                }
+            }
+            catch (SocketException e)
+            {
+                if (!lastSendFailed)
+                {
+                    Debug.LogWarning($"ArtNetSender: impossible d'envoyer vers {endpoint.Address} ({e.SocketErrorCode}). " +
+                                      "Erreurs suivantes de ce type ignorees jusqu'a ce que l'envoi refonctionne.");
+                    lastSendFailed = true;
+                }
+            }
+
             sequence = sequence == 255 ? (byte)1 : (byte)(sequence + 1);
         }
 

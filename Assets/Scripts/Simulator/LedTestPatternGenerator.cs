@@ -16,8 +16,9 @@ namespace LedShow.Simulator
     [ExecuteAlways]
     public class LedTestPatternGenerator : MonoBehaviour, ILedStateSource
     {
-        [SerializeField] private int width = 32;
-        [SerializeField] private int height = 18;
+        // 128x128 matches the real GroupeLaps LED wall (see LedWallLayout).
+        [SerializeField] private int width = 128;
+        [SerializeField] private int height = 128;
         [SerializeField] private TestPattern pattern = TestPattern.Checkerboard;
         [SerializeField] private Color solidColor = Color.red;
         [SerializeField] private float chaseSpeed = 2f;

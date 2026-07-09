@@ -12,8 +12,9 @@ namespace LedShow.Authoring
     public class LedRenderToTextureSource : MonoBehaviour, ILedStateSource
     {
         [SerializeField] private Camera sourceCamera;
-        [SerializeField] private int width = 32;
-        [SerializeField] private int height = 18;
+        // 128x128 matches the real GroupeLaps LED wall (see LedWallLayout).
+        [SerializeField] private int width = 128;
+        [SerializeField] private int height = 128;
 
         private RenderTexture renderTexture;
         private Texture2D readbackTexture;
@@ -75,9 +76,13 @@ namespace LedShow.Authoring
 
             AllocateResources();
 
-            // In edit mode nothing else asks the camera to render, so we drive it ourselves.
-            sourceCamera.Render();
-
+            // No manual Camera.Render() call here: the camera is left enabled with
+            // its targetTexture set, so Unity's normal render loop draws it into
+            // that RenderTexture automatically every frame (both in Play mode and
+            // in edit mode, as long as some view is being repainted) - exactly like
+            // any other camera, just not aimed at the screen. Calling Render()
+            // manually on top of that double-renders the camera in the same frame,
+            // which conflicts with URP's Render Graph and breaks the Game view.
             RenderTexture previousActive = RenderTexture.active;
             RenderTexture.active = renderTexture;
             readbackTexture.ReadPixels(new Rect(0, 0, width, height), 0, 0);

@@ -20,9 +20,9 @@ namespace LedShow.Editor
             camera.orthographicSize = 3f;
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = Color.black;
-            // Disabled: LedRenderToTextureSource drives rendering manually via Camera.Render(),
-            // so Unity's automatic per-frame render loop must never touch this camera too.
-            camera.enabled = false;
+            // Left enabled on purpose: with targetTexture set (below, via
+            // LedRenderToTextureSource), Unity renders this camera into that
+            // texture automatically every frame - it never touches the screen.
 
             CreateUnlitShape(PrimitiveType.Cube, root.transform, new Vector3(-2f, 0f, 0f), Color.red, addSpinner: false, localScale: Vector3.one);
             // Flattened on Z: spinning around Y makes its apparent width clearly shrink/grow,

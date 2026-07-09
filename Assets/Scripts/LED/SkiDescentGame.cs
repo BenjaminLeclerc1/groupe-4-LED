@@ -10,6 +10,7 @@ public class SkiDescentGame : MonoBehaviour
     struct Obstacle
     {
         public float WorldX;
+        public bool Scored;
     }
 
     [Header("Sprites")]
@@ -39,6 +40,7 @@ public class SkiDescentGame : MonoBehaviour
     float _blinkTimer;
     float _groundY;
     float _jumpImpulse;
+    int _score;
 
     const float BlinkInterval = 0.5f;
     const string PromptText = "PRESS SPACE";
@@ -85,6 +87,7 @@ public class SkiDescentGame : MonoBehaviour
         _scrollOffset = 0f;
         _velocityY = 0f;
         _isGameOver = false;
+        _score = 0;
         _obstacles.Clear();
         _nextSpawnWorldX = 90f;
         _groundY = GetPlayerGroundY();
@@ -144,6 +147,9 @@ public class SkiDescentGame : MonoBehaviour
 
         if (_isGameOver)
         {
+            _blinkTimer += Time.deltaTime;
+            RenderDeathScreen();
+
             if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
                 StartGame();
 
@@ -153,8 +159,27 @@ public class SkiDescentGame : MonoBehaviour
         HandleJumpInput();
         UpdatePhysics();
         UpdateWorld();
+        UpdateScore();
         CheckCollisions();
         RenderFrame();
+    }
+
+    void UpdateScore()
+    {
+        for (var i = 0; i < _obstacles.Count; i++)
+        {
+            var obstacle = _obstacles[i];
+            if (obstacle.Scored)
+                continue;
+
+            var screenX = Mathf.FloorToInt(obstacle.WorldX - _scrollOffset);
+            if (screenX + _obstacle.Width >= playerColumn)
+                continue;
+
+            obstacle.Scored = true;
+            _obstacles[i] = obstacle;
+            _score++;
+        }
     }
 
     void UpdateHomeScreen()
@@ -190,24 +215,63 @@ public class SkiDescentGame : MonoBehaviour
                 applyAfter: false);
         }
 
-        DrawStartPrompt(buffer);
+        // originY is the text's bottom edge measured from the bottom of the
+        // screen (row 0): near the top of the screen, well clear of the
+        // skier/slope near the bottom.
+        int homePromptY = LEDWallConfig.VisibleHeight - PromptMarginFromBottom - PixelFont.GlyphHeight * PromptScale;
+        DrawBlinkingPrompt(buffer, homePromptY, PromptScale, Color.yellow);
         buffer.Apply();
         _wall.UpdatePreviews();
     }
 
-    void DrawStartPrompt(LEDWallBuffer buffer)
+    static readonly Color SubtlePromptColor = new(0.55f, 0.55f, 0.55f);
+
+    void RenderDeathScreen()
+    {
+        var buffer = _wall.Buffer;
+        buffer.ClearPixels(SkiSlopeRenderer.Sky);
+        SkiSlopeRenderer.Draw(buffer, 0f, playerColumn);
+
+        const string title = "GAME OVER";
+        const int titleScale = 2;
+        int titleWidth = PixelFont.MeasureWidth(title, titleScale);
+        int titleX = (LEDWallConfig.VisibleWidth - titleWidth) / 2;
+        int titleY = LEDWallConfig.VisibleHeight - 24 - PixelFont.GlyphHeight * titleScale;
+        PixelFont.Draw(title, titleX, titleY, Color.red, titleScale, buffer.SetPixel);
+
+        string scoreText = "SCORE " + _score;
+        int scoreWidth = PixelFont.MeasureWidth(scoreText, 1);
+        int scoreX = (LEDWallConfig.VisibleWidth - scoreWidth) / 2;
+        int scoreY = titleY - 6 - PixelFont.GlyphHeight;
+        PixelFont.Draw(scoreText, scoreX, scoreY, Color.white, 1, buffer.SetPixel);
+
+        // Small, dim and near the bottom - a secondary hint, not competing
+        // with the title/score for attention.
+        const int deathPromptY = 10;
+        DrawBlinkingPrompt(buffer, deathPromptY, 1, SubtlePromptColor);
+
+        buffer.Apply();
+        _wall.UpdatePreviews();
+    }
+
+    void DrawBlinkingPrompt(LEDWallBuffer buffer, int originY, int scale, Color color)
     {
         bool visible = Mathf.FloorToInt(_blinkTimer / BlinkInterval) % 2 == 0;
         if (!visible)
             return;
 
-        int textWidth = PixelFont.MeasureWidth(PromptText, PromptScale);
+        int textWidth = PixelFont.MeasureWidth(PromptText, scale);
         int originX = (LEDWallConfig.VisibleWidth - textWidth) / 2;
-        // Near the top, well clear of the skier/slope near the bottom, so it
-        // doesn't visually blend into the ground clutter.
-        int originY = LEDWallConfig.VisibleHeight - PromptMarginFromBottom - PixelFont.GlyphHeight * PromptScale;
 
-        PixelFont.Draw(PromptText, originX, originY, Color.yellow, PromptScale, buffer.SetPixel);
+        PixelFont.Draw(PromptText, originX, originY, color, scale, buffer.SetPixel);
+    }
+
+    void DrawScoreHud(LEDWallBuffer buffer)
+    {
+        string scoreText = _score.ToString();
+        const int margin = 4;
+        int originY = LEDWallConfig.VisibleHeight - margin - PixelFont.GlyphHeight;
+        PixelFont.Draw(scoreText, margin, originY, Color.white, 1, buffer.SetPixel);
     }
 
     void HandleJumpInput()
@@ -281,6 +345,7 @@ public class SkiDescentGame : MonoBehaviour
                 continue;
 
             _isGameOver = true;
+            _blinkTimer = 0f;
             return;
         }
     }
@@ -299,13 +364,11 @@ public class SkiDescentGame : MonoBehaviour
                 _skier.Width,
                 _skier.Height,
                 new Vector2Int(playerColumn, Mathf.FloorToInt(_playerY)),
-                applyAfter: true);
-        }
-        else
-        {
-            buffer.Apply();
+                applyAfter: false);
         }
 
+        DrawScoreHud(buffer);
+        buffer.Apply();
         _wall.UpdatePreviews();
     }
 

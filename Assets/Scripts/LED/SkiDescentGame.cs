@@ -35,18 +35,43 @@ public class SkiDescentGame : MonoBehaviour
     float _nextSpawnWorldX;
     bool _isRunning;
     bool _isGameOver;
+    bool _isAtHomeScreen = true;
+    float _blinkTimer;
     float _groundY;
     float _jumpImpulse;
+
+    const float BlinkInterval = 0.5f;
+    const string PromptText = "PRESS SPACE";
+    const int PromptScale = 2;
+    const int PromptMarginFromBottom = 20;
 
     void OnEnable()
     {
         _wall = GetComponent<LEDWallSimulator>();
-        StartGame();
+        ShowHomeScreen();
     }
 
     void OnDisable()
     {
         _isRunning = false;
+    }
+
+    public void ShowHomeScreen()
+    {
+        if (_wall == null)
+            _wall = GetComponent<LEDWallSimulator>();
+
+        LoadSprites();
+
+        _isAtHomeScreen = true;
+        _isRunning = false;
+        _isGameOver = false;
+        _blinkTimer = 0f;
+        _groundY = GetPlayerGroundY();
+        _playerY = _groundY;
+
+        if (_skier.HasPixels)
+            RenderHomeScreen();
     }
 
     public void StartGame()
@@ -56,6 +81,7 @@ public class SkiDescentGame : MonoBehaviour
 
         LoadSprites();
 
+        _isAtHomeScreen = false;
         _scrollOffset = 0f;
         _velocityY = 0f;
         _isGameOver = false;
@@ -80,6 +106,13 @@ public class SkiDescentGame : MonoBehaviour
 
         LoadSprites();
 
+        if (_isAtHomeScreen)
+        {
+            if (_skier.HasPixels)
+                RenderHomeScreen();
+            return;
+        }
+
         if (!_isRunning && _skier.HasPixels)
             _isRunning = true;
 
@@ -89,6 +122,12 @@ public class SkiDescentGame : MonoBehaviour
 
     void Update()
     {
+        if (_isAtHomeScreen)
+        {
+            UpdateHomeScreen();
+            return;
+        }
+
         if (!_isRunning)
             return;
 
@@ -116,6 +155,59 @@ public class SkiDescentGame : MonoBehaviour
         UpdateWorld();
         CheckCollisions();
         RenderFrame();
+    }
+
+    void UpdateHomeScreen()
+    {
+        if (!Application.isPlaying)
+        {
+            if (animateInEditMode)
+                RenderHomeScreen();
+
+            return;
+        }
+
+        _blinkTimer += Time.deltaTime;
+        RenderHomeScreen();
+
+        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+            StartGame();
+    }
+
+    void RenderHomeScreen()
+    {
+        var buffer = _wall.Buffer;
+        buffer.ClearPixels(SkiSlopeRenderer.Sky);
+        SkiSlopeRenderer.Draw(buffer, 0f, playerColumn);
+
+        if (_skier.HasPixels)
+        {
+            buffer.DrawTexture(
+                _skier.Pixels,
+                _skier.Width,
+                _skier.Height,
+                new Vector2Int(playerColumn, Mathf.FloorToInt(_groundY)),
+                applyAfter: false);
+        }
+
+        DrawStartPrompt(buffer);
+        buffer.Apply();
+        _wall.UpdatePreviews();
+    }
+
+    void DrawStartPrompt(LEDWallBuffer buffer)
+    {
+        bool visible = Mathf.FloorToInt(_blinkTimer / BlinkInterval) % 2 == 0;
+        if (!visible)
+            return;
+
+        int textWidth = PixelFont.MeasureWidth(PromptText, PromptScale);
+        int originX = (LEDWallConfig.VisibleWidth - textWidth) / 2;
+        // Near the top, well clear of the skier/slope near the bottom, so it
+        // doesn't visually blend into the ground clutter.
+        int originY = LEDWallConfig.VisibleHeight - PromptMarginFromBottom - PixelFont.GlyphHeight * PromptScale;
+
+        PixelFont.Draw(PromptText, originX, originY, Color.yellow, PromptScale, buffer.SetPixel);
     }
 
     void HandleJumpInput()

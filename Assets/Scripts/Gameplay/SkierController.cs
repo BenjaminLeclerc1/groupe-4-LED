@@ -3,12 +3,12 @@ using UnityEngine.InputSystem;
 
 namespace LedShow.Gameplay
 {
-    // No Rigidbody: PhysX gravity/impulses are what usually cause a bounce on
+    // No Rigidbody: PhysX2D gravity/impulses are what usually cause a bounce on
     // landing (velocity overshoots below the ground, then gets corrected next
     // frame). Instead the vertical position is fully driven by a raycast ground
     // sample plus the jump curve, so landing is a direct assignment, not a
     // physics correction, and can never overshoot.
-    [RequireComponent(typeof(CapsuleCollider))]
+    [RequireComponent(typeof(CapsuleCollider2D))]
     public class SkierController : MonoBehaviour
     {
         [SerializeField]
@@ -22,7 +22,7 @@ namespace LedShow.Gameplay
         [SerializeField] private LayerMask groundMask = ~0;
         [SerializeField] private float groundCheckDistance = 0.2f;
 
-        private CapsuleCollider capsule;
+        private CapsuleCollider2D capsule;
         private float capsuleRadius;
         private float jumpElapsed;
 
@@ -30,8 +30,8 @@ namespace LedShow.Gameplay
 
         private void Awake()
         {
-            capsule = GetComponent<CapsuleCollider>();
-            capsuleRadius = capsule.radius;
+            capsule = GetComponent<CapsuleCollider2D>();
+            capsuleRadius = capsule.size.x / 2f;
         }
 
         private void Update()
@@ -82,10 +82,11 @@ namespace LedShow.Gameplay
 
         private float SampleGroundHeight()
         {
-            Vector3 origin = transform.position + Vector3.up * capsuleRadius;
+            Vector2 origin = (Vector2)transform.position + Vector2.up * capsuleRadius;
             float castDistance = capsuleRadius + groundCheckDistance + 10f;
 
-            if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, castDistance, groundMask))
+            RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, castDistance, groundMask);
+            if (hit.collider != null)
             {
                 return hit.point.y + capsuleRadius;
             }
@@ -95,8 +96,8 @@ namespace LedShow.Gameplay
 
         private bool IsGrounded()
         {
-            Vector3 origin = transform.position + Vector3.up * capsuleRadius;
-            return Physics.Raycast(origin, Vector3.down, capsuleRadius + groundCheckDistance, groundMask);
+            Vector2 origin = (Vector2)transform.position + Vector2.up * capsuleRadius;
+            return Physics2D.Raycast(origin, Vector2.down, capsuleRadius + groundCheckDistance, groundMask);
         }
 
         private static bool JumpWasPressedThisFrame()

@@ -6,16 +6,16 @@ namespace LedShow.Gameplay
     // Manual AABB overlap test rather than OnCollisionEnter/OnTriggerEnter: the
     // skier has no Rigidbody, so there is no PhysX collision resolution to hook
     // into, only a bounds intersection against the registered obstacles.
-    [RequireComponent(typeof(Collider))]
+    [RequireComponent(typeof(Collider2D))]
     public class ObstacleCollisionDetector : MonoBehaviour
     {
         public event Action OnHitObstacle;
 
-        private Collider playerCollider;
+        private Collider2D playerCollider;
 
         private void Awake()
         {
-            playerCollider = GetComponent<Collider>();
+            playerCollider = GetComponent<Collider2D>();
         }
 
         private void Update()

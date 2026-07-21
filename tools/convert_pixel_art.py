@@ -98,6 +98,16 @@ def main() -> None:
             ROOT / "Assets/Sprite/roche_obstacle.png",
             False,
         ),
+        "sapin": (
+            ROOT / "Assets/Sprite/Sapin.html",
+            ROOT / "Assets/Sprite/sapin.png",
+            False,
+        ),
+        "piaf": (
+            ROOT / "Assets/Sprite/piaf.html",
+            ROOT / "Assets/Sprite/piaf.png",
+            False,
+        ),
     }
 
     target = sys.argv[1] if len(sys.argv) > 1 else "all"
@@ -107,7 +117,7 @@ def main() -> None:
         return
 
     if target not in presets:
-        raise SystemExit(f"Unknown target '{target}'. Use: skieur, obstacle, all")
+        raise SystemExit(f"Unknown target '{target}'. Use: skieur, obstacle, sapin, piaf, all")
 
     convert_html_to_png(*presets[target])
 

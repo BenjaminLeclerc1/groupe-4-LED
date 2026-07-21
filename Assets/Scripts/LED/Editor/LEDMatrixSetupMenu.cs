@@ -55,6 +55,43 @@ public static class LEDMatrixSetupMenu
             LEDPreviewWindow.Open();
     }
 
+    [MenuItem("LED/Préparer le sprite piaf")]
+    static void PreparePiafSprite()
+    {
+        var projectRoot = Application.dataPath.Replace("\\", "/").Replace("/Assets", "");
+        var scriptPath = $"{projectRoot}/tools/prepare_piaf.py";
+
+        var process = new System.Diagnostics.Process
+        {
+            StartInfo = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "py",
+                Arguments = $"-3 \"{scriptPath}\"",
+                WorkingDirectory = projectRoot,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            }
+        };
+
+        process.Start();
+        var output = process.StandardOutput.ReadToEnd();
+        var error = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+
+        AssetDatabase.Refresh();
+        LEDAssetUtility.ConfigureTextureImport(LEDAssetUtility.PiafPath);
+
+        if (process.ExitCode != 0)
+        {
+            EditorUtility.DisplayDialog("Erreur piaf", error, "OK");
+            return;
+        }
+
+        EditorUtility.DisplayDialog("Piaf prêt", output.Trim(), "OK");
+    }
+
     [MenuItem("LED/Convertir les sprites HTML en PNG")]
     static void ConvertHtmlToPng()
     {
@@ -118,8 +155,12 @@ public static class LEDMatrixSetupMenu
             return;
 
         var obstacle = LEDAssetUtility.LoadObstacleTexture();
+        var sapin = LEDAssetUtility.LoadSapinTexture();
+        var piaf = LEDAssetUtility.LoadPiafTexture();
         var serializedGame = new SerializedObject(game);
         serializedGame.FindProperty("obstacleTexture").objectReferenceValue = obstacle;
+        serializedGame.FindProperty("sapinTexture").objectReferenceValue = sapin;
+        serializedGame.FindProperty("piafTexture").objectReferenceValue = piaf;
         serializedGame.ApplyModifiedPropertiesWithoutUndo();
     }
 }

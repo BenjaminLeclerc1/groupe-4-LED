@@ -7,10 +7,16 @@ public static class LEDAssetUtility
 {
     public const string SkieurPath = "Assets/Sprite/skieur.png";
     public const string ObstaclePath = "Assets/Sprite/roche_obstacle.png";
+    public const string SapinPath = "Assets/Sprite/sapin.png";
+    public const string PiafPath = "Assets/Sprite/piaf.png";
 
     public static Texture2D LoadSkieurTexture() => LoadTexture(SkieurPath);
 
     public static Texture2D LoadObstacleTexture() => LoadTexture(ObstaclePath);
+
+    public static Texture2D LoadSapinTexture() => LoadTexture(SapinPath);
+
+    public static Texture2D LoadPiafTexture() => LoadTexture(PiafPath);
 
     public static Texture2D LoadTexture(string assetPath)
     {
@@ -43,6 +49,8 @@ public static class LEDAssetUtility
     {
         ConfigureTextureImport(SkieurPath);
         ConfigureTextureImport(ObstaclePath);
+        ConfigureTextureImport(SapinPath);
+        ConfigureTextureImport(PiafPath);
     }
 }
 #endif

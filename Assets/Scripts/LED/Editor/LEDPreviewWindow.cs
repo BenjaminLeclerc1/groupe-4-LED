@@ -36,7 +36,7 @@ public class LEDPreviewWindow : EditorWindow
 
     void TryAutoSetupScene()
     {
-        if (_autoSetupAttempted)
+        if (_autoSetupAttempted || Application.isPlaying)
             return;
 
         _autoSetupAttempted = true;

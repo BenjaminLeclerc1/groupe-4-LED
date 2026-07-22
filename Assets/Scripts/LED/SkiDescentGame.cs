@@ -67,6 +67,7 @@ public class SkiDescentGame : MonoBehaviour
     float _activeRunSpeed;
     bool _editorPreviewActive;
     SkiLevelTimeline _editorPreviewTimeline;
+    SkiShowLighting _showLighting;
 
     const float BlinkInterval = 0.5f;
     const string PromptText = "PRESS SPACE";
@@ -77,7 +78,10 @@ public class SkiDescentGame : MonoBehaviour
     {
         _wall = GetComponent<LEDWallSimulator>();
         if (!_editorPreviewActive)
+        {
+            _showLighting = SkiShowLighting.EnsureExists();
             ShowHomeScreen();
+        }
     }
 
     void OnDisable()
@@ -250,7 +254,10 @@ public class SkiDescentGame : MonoBehaviour
             RenderDeathScreen();
 
             if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+            {
+                TriggerNorwayLights();
                 StartGame();
+            }
 
             return;
         }
@@ -297,7 +304,10 @@ public class SkiDescentGame : MonoBehaviour
         RenderHomeScreen();
 
         if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            TriggerNorwayLights();
             StartGame();
+        }
     }
 
     void RenderHomeScreen()
@@ -385,9 +395,21 @@ public class SkiDescentGame : MonoBehaviour
             return;
 
         _velocityY = _jumpImpulse;
+        TriggerNorwayLights();
 
         if (recordObstaclesOnJump && _useTimelineMode && levelTimeline != null)
             RecordObstacleAtCurrentTime();
+    }
+
+    void TriggerNorwayLights()
+    {
+        if (_editorPreviewActive)
+            return;
+
+        if (_showLighting == null)
+            _showLighting = SkiShowLighting.EnsureExists();
+
+        _showLighting.FlashNorway();
     }
 
     void HandleRecordInput()

@@ -12,6 +12,131 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a1324302e9e72a41b253f60c58270fd, type: 3}
   m_Name: Norvege
   m_EditorClassIdentifier: Assembly-CSharp::SkiLevelTimeline
-  music: {fileID: 0}
+  music: {fileID: 8300000, guid: 7d90f622ad9e4f445b7a5bfeeed4181f, type: 3}
+  musicStartTime: 7
+  musicEndTime: 57.000153
   runSpeed: 34
-  obstacles: []
+  obstacles:
+  - timeSeconds: 2.4
+    type: 1
+    lane: 0
+  - timeSeconds: 4.7
+    type: 2
+    lane: 1
+  - timeSeconds: 7.303444
+    type: 0
+    lane: 0
+  - timeSeconds: 8.5
+    type: 2
+    lane: 1
+  - timeSeconds: 8.5
+    type: 2
+    lane: 1
+  - timeSeconds: 9.9
+    type: 1
+    lane: 0
+  - timeSeconds: 11.1
+    type: 1
+    lane: 0
+  - timeSeconds: 12.458274
+    type: 0
+    lane: 0
+  - timeSeconds: 14.59451
+    type: 0
+    lane: 0
+  - timeSeconds: 16.1
+    type: 2
+    lane: 1
+  - timeSeconds: 17.195147
+    type: 0
+    lane: 0
+  - timeSeconds: 18.2
+    type: 2
+    lane: 1
+  - timeSeconds: 20.3
+    type: 1
+    lane: 0
+  - timeSeconds: 21.815916
+    type: 0
+    lane: 0
+  - timeSeconds: 22.6
+    type: 2
+    lane: 1
+  - timeSeconds: 23.9
+    type: 2
+    lane: 1
+  - timeSeconds: 25.41501
+    type: 0
+    lane: 0
+  - timeSeconds: 26.1
+    type: 2
+    lane: 1
+  - timeSeconds: 27.1
+    type: 2
+    lane: 1
+  - timeSeconds: 28.131744
+    type: 0
+    lane: 0
+  - timeSeconds: 30.1
+    type: 1
+    lane: 0
+  - timeSeconds: 31.521858
+    type: 0
+    lane: 0
+  - timeSeconds: 32.3
+    type: 2
+    lane: 1
+  - timeSeconds: 33.240135
+    type: 0
+    lane: 0
+  - timeSeconds: 34.4
+    type: 2
+    lane: 1
+  - timeSeconds: 35.980087
+    type: 0
+    lane: 0
+  - timeSeconds: 37.4
+    type: 1
+    lane: 0
+  - timeSeconds: 37.7
+    type: 1
+    lane: 0
+  - timeSeconds: 38.7
+    type: 2
+    lane: 1
+  - timeSeconds: 39.695282
+    type: 0
+    lane: 0
+  - timeSeconds: 42.2
+    type: 2
+    lane: 1
+  - timeSeconds: 42.9
+    type: 0
+    lane: 0
+  - timeSeconds: 43.2
+    type: 0
+    lane: 0
+  - timeSeconds: 43.9
+    type: 2
+    lane: 1
+  - timeSeconds: 44.5
+    type: 2
+    lane: 1
+  - timeSeconds: 45
+    type: 2
+    lane: 1
+  - timeSeconds: 46
+    type: 0
+    lane: 0
+  - timeSeconds: 47.1
+    type: 2
+    lane: 1
+  - timeSeconds: 48
+    type: 1
+    lane: 0
+  - timeSeconds: 49.2
+    type: 1
+    lane: 0
+  - timeSeconds: 49.5
+    type: 1
+    lane: 0

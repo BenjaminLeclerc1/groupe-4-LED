@@ -2,6 +2,7 @@
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using LedShow.LED;
 
 public class SkiLevelTimelineWindow : EditorWindow
 {
@@ -34,7 +35,9 @@ public class SkiLevelTimelineWindow : EditorWindow
     double _lastScenePreviewTime;
     double _lastTimelineRepaintTime;
     float _lastRenderedPlayhead = -1f;
+    float _lastHeardClipTime = -1f;
     bool _previewSceneReady;
+    bool _usingEditorAudioPreview;
 
     [MenuItem("LED/Éditeur Timeline Niveau")]
     public static void Open()
@@ -81,8 +84,15 @@ public class SkiLevelTimelineWindow : EditorWindow
         var delta = (float)(now - _lastEditorTime);
         _lastEditorTime = now;
 
-        if (_previewSource != null && _previewSource.isPlaying)
+        // Hors Play Unity, AudioSource.isPlaying peut être true sans que .time avance
+        // → le playhead restait bloqué et la démo ne scrollait pas. On avance toujours
+        // avec l'horloge éditeur ; on ne synchro audio que si le temps clip bouge vraiment.
+        if (Application.isPlaying
+            && _previewSource != null
+            && _previewSource.isPlaying
+            && _previewSource.time > _lastHeardClipTime + 0.0001f)
         {
+            _lastHeardClipTime = _previewSource.time;
             if (_previewSource.time >= _timeline.MusicEnd)
             {
                 _playheadTime = _timeline.MusicDuration;
@@ -109,6 +119,7 @@ public class SkiLevelTimelineWindow : EditorWindow
         {
             _lastTimelineRepaintTime = now;
             Repaint();
+            RepaintGameViews();
         }
     }
 
@@ -124,6 +135,11 @@ public class SkiLevelTimelineWindow : EditorWindow
 
     void ApplyScenePreview(bool force = false)
     {
+        // En Play Unity, le jeu possède l'écran : ne pas réécrire via la preview
+        // (sinon home/game/preview se battent → clignotement).
+        if (Application.isPlaying)
+            return;
+
         if (_timeline == null)
             return;
 
@@ -146,7 +162,26 @@ public class SkiLevelTimelineWindow : EditorWindow
 
         _lastRenderedPlayhead = _playheadTime;
         EnsurePreviewSceneReady();
+        if (_previewGame == null)
+            return;
+
         _previewGame.PreviewTimeline(_timeline, _playheadTime);
+        RepaintGameViews();
+    }
+
+    static void RepaintGameViews()
+    {
+        SceneView.RepaintAll();
+
+        var gameViewType = typeof(EditorWindow).Assembly.GetType("UnityEditor.GameView");
+        if (gameViewType == null)
+            return;
+
+        foreach (var window in Resources.FindObjectsOfTypeAll(gameViewType))
+        {
+            if (window is EditorWindow editorWindow)
+                editorWindow.Repaint();
+        }
     }
 
     void EnsurePreviewSceneReady()
@@ -356,20 +391,31 @@ public class SkiLevelTimelineWindow : EditorWindow
 
         GUILayout.FlexibleSpace();
 
-        if (GUILayout.Button(_isPlaying ? "■ Stop" : "▶ Play", GUILayout.Width(70f)))
-        {
-            if (_isPlaying)
-                StopPreview();
-            else
-                StartPreview();
-        }
+        DrawCollisionToggle();
 
-        if (GUILayout.Button("⟲", GUILayout.Width(28f)))
+        if (Application.isPlaying)
         {
-            _playheadTime = 0f;
-            if (_previewSource != null)
-                _previewSource.time = GetSafeClipTime(0f);
-            ScrubPreview();
+            if (GUILayout.Button(new GUIContent("■ Stop", "Stoppe la partie en cours (retour écran PRESS SPACE)."), GUILayout.Width(70f)))
+                StopPlaySession();
+
+            if (GUILayout.Button(new GUIContent("▶ Relancer", "Relance le niveau timeline depuis le début."), GUILayout.Width(80f)))
+                RestartPlaySession();
+        }
+        else
+        {
+            if (GUILayout.Button(_isPlaying ? "■ Stop" : "▶ Play", GUILayout.Width(70f)))
+            {
+                if (_isPlaying)
+                    StopPreview(endScenePreview: true);
+                else
+                    StartPreview();
+            }
+
+            if (GUILayout.Button(new GUIContent("⟲", "Remet le playhead à 0."), GUILayout.Width(28f)))
+            {
+                _playheadTime = 0f;
+                ScrubPreview();
+            }
         }
 
         EditorGUILayout.EndHorizontal();
@@ -384,6 +430,74 @@ public class SkiLevelTimelineWindow : EditorWindow
         }
     }
 
+    void DrawCollisionToggle()
+    {
+        var game = UnityEngine.Object.FindAnyObjectByType<SkiDescentGame>();
+        if (game == null)
+        {
+            GUI.enabled = false;
+            GUILayout.Button("Collisions ?", GUILayout.Width(120f));
+            GUI.enabled = true;
+            return;
+        }
+
+        var on = game.CollisionsEnabled;
+        var label = on ? "● Avec collisions" : "○ Sans collisions";
+        var prev = GUI.backgroundColor;
+        GUI.backgroundColor = on ? new Color(0.55f, 0.85f, 0.55f) : new Color(0.85f, 0.7f, 0.35f);
+
+        if (GUILayout.Button(new GUIContent(label, "Game over au contact des obstacles (utile en Play Unity)."), GUILayout.Width(140f)))
+        {
+            if (!Application.isPlaying)
+                Undo.RecordObject(game, "Toggle collisions");
+
+            game.CollisionsEnabled = !on;
+
+            if (!Application.isPlaying)
+                EditorUtility.SetDirty(game);
+        }
+
+        GUI.backgroundColor = prev;
+    }
+
+    void StopPlaySession()
+    {
+        StopPreview(endScenePreview: true);
+
+        var game = UnityEngine.Object.FindAnyObjectByType<SkiDescentGame>();
+        if (game == null)
+            return;
+
+        // Quitte le mode preview éditeur s'il était resté actif pendant Play
+        // (sinon les collisions restent désactivées).
+        if (game.IsEditorPreviewActive)
+            game.EndTimelinePreview();
+        else
+            game.ShowHomeScreen();
+    }
+
+    void RestartPlaySession()
+    {
+        StopPreview(endScenePreview: true);
+
+        var game = UnityEngine.Object.FindAnyObjectByType<SkiDescentGame>();
+        if (game == null)
+            return;
+
+        if (_timeline != null)
+        {
+            game.LevelTimeline = _timeline;
+            game.UseLevelTimeline = true;
+        }
+
+        if (game.IsEditorPreviewActive)
+            game.EndTimelinePreview();
+
+        game.StartGame();
+        _playheadTime = 0f;
+        Repaint();
+    }
+
     void ScrubPreview()
     {
         PausePlaybackForScrub();
@@ -395,9 +509,7 @@ public class SkiLevelTimelineWindow : EditorWindow
     {
         _isPlaying = false;
         _lastRenderedPlayhead = -1f;
-
-        if (_previewSource != null && _previewSource.isPlaying)
-            _previewSource.Pause();
+        StopPreviewAudio();
     }
 
     void DrawTimeline()
@@ -1030,31 +1142,41 @@ public class SkiLevelTimelineWindow : EditorWindow
 
     void StartPreview()
     {
+        // En Play Unity, on relance la vraie partie (pas la preview éditeur,
+        // qui bloquait les collisions via _editorPreviewActive).
+        if (Application.isPlaying)
+        {
+            RestartPlaySession();
+            return;
+        }
+
+        if (UnityEngine.Object.FindAnyObjectByType<SkiDescentGame>() == null)
+        {
+            EditorUtility.DisplayDialog(
+                "Preview",
+                "Aucun SkiDescentGame dans la scène.\nUtilise LED > Configurer la scène, puis réessaie.",
+                "OK");
+            return;
+        }
+
         _isPlaying = true;
         _lastEditorTime = EditorApplication.timeSinceStartup;
         _lastScenePreviewTime = 0;
+        _lastHeardClipTime = -1f;
+        _lastRenderedPlayhead = -1f;
         ForceRebuildPreviewScene();
         ApplyScenePreview(force: true);
 
         if (_timeline.music == null)
             return;
 
-        EnsurePreviewSource();
-        if (_previewClip != _timeline.music)
-        {
-            _previewClip = _timeline.music;
-            _previewSource.clip = _timeline.music;
-        }
-
-        _previewSource.time = GetSafeClipTime(_playheadTime);
-        _previewSource.Play();
+        StartPreviewAudio(GetSafeClipTime(_playheadTime));
     }
 
     void StopPreview(bool endScenePreview = false)
     {
         _isPlaying = false;
-        if (_previewSource != null)
-            _previewSource.Stop();
+        StopPreviewAudio();
 
         if (endScenePreview)
         {
@@ -1068,6 +1190,46 @@ public class SkiLevelTimelineWindow : EditorWindow
         }
     }
 
+    void StartPreviewAudio(float clipTimeSeconds)
+    {
+        StopPreviewAudio();
+
+        if (_timeline == null || _timeline.music == null)
+            return;
+
+        // Hors Play Unity : AudioUtil (sinon le playhead / la musique restent figés).
+        if (!Application.isPlaying)
+        {
+            _usingEditorAudioPreview = TryPlayEditorClip(_timeline.music, clipTimeSeconds);
+            if (_usingEditorAudioPreview)
+                return;
+        }
+
+        EnsurePreviewSource();
+        if (_previewClip != _timeline.music)
+        {
+            _previewClip = _timeline.music;
+            _previewSource.clip = _timeline.music;
+        }
+
+        _previewSource.time = clipTimeSeconds;
+        _previewSource.Play();
+        _lastHeardClipTime = _previewSource.time;
+        _usingEditorAudioPreview = false;
+    }
+
+    void StopPreviewAudio()
+    {
+        if (_usingEditorAudioPreview)
+        {
+            StopEditorClips();
+            _usingEditorAudioPreview = false;
+        }
+
+        if (_previewSource != null && _previewSource.isPlaying)
+            _previewSource.Stop();
+    }
+
     void EnsurePreviewSource()
     {
         if (_previewSource != null)
@@ -1079,6 +1241,43 @@ public class SkiLevelTimelineWindow : EditorWindow
         _previewSource = host.AddComponent<AudioSource>();
         _previewSource.playOnAwake = false;
         _previewSource.hideFlags = HideFlags.HideAndDontSave;
+    }
+
+    static bool TryPlayEditorClip(AudioClip clip, float startTimeSeconds)
+    {
+        var audioUtil = typeof(AudioImporter).Assembly.GetType("UnityEditor.AudioUtil");
+        if (audioUtil == null || clip == null)
+            return false;
+
+        StopEditorClips();
+
+        var startSample = Mathf.Clamp(
+            Mathf.FloorToInt(startTimeSeconds * clip.frequency),
+            0,
+            Mathf.Max(0, clip.samples - 1));
+
+        // Unity 2022+/6 : PlayPreviewClip(AudioClip, int startSample, bool loop)
+        var playMethod = audioUtil.GetMethod(
+            "PlayPreviewClip",
+            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public,
+            null,
+            new[] { typeof(AudioClip), typeof(int), typeof(bool) },
+            null);
+
+        if (playMethod == null)
+            return false;
+
+        playMethod.Invoke(null, new object[] { clip, startSample, false });
+        return true;
+    }
+
+    static void StopEditorClips()
+    {
+        var audioUtil = typeof(AudioImporter).Assembly.GetType("UnityEditor.AudioUtil");
+        var stopMethod = audioUtil?.GetMethod(
+            "StopAllPreviewClips",
+            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+        stopMethod?.Invoke(null, null);
     }
 
     float GetSafeClipTime(float levelTimeSeconds)

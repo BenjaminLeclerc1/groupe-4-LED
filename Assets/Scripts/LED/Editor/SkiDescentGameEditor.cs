@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
+using LedShow.LED;
 
 [CustomEditor(typeof(SkiDescentGame))]
 public class SkiDescentGameEditor : Editor

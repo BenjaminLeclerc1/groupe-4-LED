@@ -2,6 +2,7 @@
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using LedShow.LED;
 
 [InitializeOnLoad]
 static class LEDWallSceneAutoFix

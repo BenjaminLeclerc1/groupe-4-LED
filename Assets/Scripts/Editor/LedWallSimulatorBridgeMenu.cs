@@ -1,14 +1,13 @@
 using UnityEditor;
 using UnityEngine;
 using LedShow.Authoring;
-using LedShow.Simulator;
 using LedShow.Routing;
 
 namespace LedShow.Editor
 {
     public static class LedWallSimulatorBridgeMenu
     {
-        [MenuItem("LED Show/Bridge Ski Game To Our Pipeline")]
+        [MenuItem("LED/Bridge Ski Game To Our Pipeline")]
         public static void CreateBridge()
         {
             // Reuses the ski game's own bootstrap so we don't have to know how
@@ -32,15 +31,6 @@ namespace LedShow.Editor
 
             int rewiredCount = 0;
 
-            var display = Object.FindAnyObjectByType<LedSimulatorDisplay>();
-            if (display != null)
-            {
-                var serializedDisplay = new SerializedObject(display);
-                serializedDisplay.FindProperty("stateSourceBehaviour").objectReferenceValue = bridge;
-                serializedDisplay.ApplyModifiedProperties();
-                rewiredCount++;
-            }
-
             var router = Object.FindAnyObjectByType<LedWallArtNetRouter>();
             if (router != null)
             {
@@ -51,7 +41,7 @@ namespace LedShow.Editor
             }
 
             Debug.Log($"Pont cree, branche sur '{wallSimulator.name}'. {rewiredCount} composant(s) " +
-                      "(simulateur et/ou routeur) rebranches automatiquement dessus.", bridge);
+                      "(routeur) rebranches automatiquement dessus.", bridge);
 
             Selection.activeGameObject = go;
         }

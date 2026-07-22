@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
+using LedShow.LED;
 
 public static class LEDMatrixSetupMenu
 {

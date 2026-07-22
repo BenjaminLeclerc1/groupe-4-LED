@@ -7,16 +7,15 @@ using LedShow.Routing;
 
 namespace LedShow.Editor
 {
-    // Debug tool (P8): listens on the Art-Net UDP port and shows what actually
-    // arrives on the network, independently of ArtNetSender's own code - so a
-    // bug shared by both wouldn't hide itself. Open via LED Show > ArtNet Monitor.
+    // Debug tool: listens on the Art-Net UDP port and shows what actually
+    // arrives on the network. Open via LED > ArtNet Monitor.
     public class ArtNetMonitorWindow : EditorWindow
     {
         private UdpClient listener;
         private string lastPacketInfo = "En attente de paquets sur le port UDP 6454...";
         private int packetCount;
 
-        [MenuItem("LED Show/ArtNet Monitor")]
+        [MenuItem("LED/ArtNet Monitor")]
         public static void Open()
         {
             GetWindow<ArtNetMonitorWindow>("ArtNet Monitor");

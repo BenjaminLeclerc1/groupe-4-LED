@@ -6,20 +6,15 @@ namespace LedShow.Routing
     // Routes a 128x128 LedState to the 4 real controllers of the GroupeLaps LED
     // wall, using LedWallLayout to translate each pixel into the exact
     // (controller, universe, channel) address dictated by its physical wiring.
-    [ExecuteAlways]
+    // Play-only : pas d'envoi Art-Net en mode éditeur.
+    [DefaultExecutionOrder(100)]
     public class LedWallArtNetRouter : MonoBehaviour
     {
         [Tooltip("Any component implementing ILedStateSource. Only the first 128x128 pixels are used.")]
         [SerializeField] private MonoBehaviour stateSourceBehaviour;
 
-        [Tooltip("IP des 4 controleurs. Laisse vide pour utiliser LedWallLayout par defaut.")]
-        [SerializeField] private string[] controllerIps =
-        {
-            "192.168.1.45",
-            "192.168.1.46",
-            "192.168.1.47",
-            "192.168.1.48",
-        };
+        [Tooltip("IP des 4 controleurs. Vide = LedNetworkConfig.")]
+        [SerializeField] private string[] controllerIps;
 
         [SerializeField] private float sendRateHz = 40f;
         [Tooltip("Intensite globale du mur LED (0 = eteint, 1 = plein).")]
@@ -64,6 +59,9 @@ namespace LedShow.Routing
 
         private void OnEnable()
         {
+            if (!Application.isPlaying)
+                return;
+
             if (stateSourceBehaviour != null && !(stateSourceBehaviour is ILedStateSource))
             {
                 Debug.LogError($"{nameof(LedWallArtNetRouter)}: '{stateSourceBehaviour.name}' does not implement ILedStateSource.", this);
@@ -107,15 +105,18 @@ namespace LedShow.Routing
 
         private void Update()
         {
+            if (!Application.isPlaying)
+                return;
+
             var source = stateSourceBehaviour as ILedStateSource;
             if (source == null || source.State == null || senders == null)
             {
-                if (logSendStatus && !loggedMissingSource && Application.isPlaying)
+                if (logSendStatus && !loggedMissingSource)
                 {
                     loggedMissingSource = true;
                     Debug.LogWarning(
                         $"{nameof(LedWallArtNetRouter)}: aucune source branchee (State Source Behaviour). " +
-                        "Utilise LED Show > Connect Ski Game To Real Wall.",
+                        "Utilise LED > Connect Ski Game To Real Wall.",
                         this);
                 }
 

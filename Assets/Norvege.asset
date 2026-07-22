@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7a1324302e9e72a41b253f60c58270fd, type: 3}
   m_Name: Norvege
-  m_EditorClassIdentifier: Assembly-CSharp::SkiLevelTimeline
+  m_EditorClassIdentifier: Assembly-CSharp::LedShow.LED.SkiLevelTimeline
   music: {fileID: 0}
   runSpeed: 34
   obstacles: []

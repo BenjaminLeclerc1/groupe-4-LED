@@ -1,25 +1,20 @@
 using UnityEditor;
 using UnityEngine;
 using LedShow.Routing;
-using LedShow.Simulator;
 using LedShow.Authoring;
+using LedShow.LED;
 
 namespace LedShow.Editor
 {
     public static class LedWallRouterMenu
     {
-        [MenuItem("LED Show/Create LED Wall Router (real wall)")]
+        [MenuItem("LED/Create LED Wall Router (real wall)")]
         public static void CreateRouter()
         {
             var go = new GameObject("LED Wall Router");
             var router = go.AddComponent<LedWallArtNetRouter>();
 
-            MonoBehaviour existingSource = Object.FindAnyObjectByType<LedRenderToTextureSource>();
-            if (existingSource == null)
-            {
-                existingSource = Object.FindAnyObjectByType<LedTestPatternGenerator>();
-            }
-
+            var existingSource = Object.FindAnyObjectByType<LedWallSimulatorBridgeSource>();
             if (existingSource != null)
             {
                 var serializedRouter = new SerializedObject(router);
@@ -31,7 +26,7 @@ namespace LedShow.Editor
             else
             {
                 Debug.Log("Aucune source de state trouvee dans la scene : glisse-en une dans le champ " +
-                          "'State Source Behaviour' du routeur.", router);
+                          "'State Source Behaviour' du routeur (ex. LedWallSimulatorBridgeSource).", router);
             }
 
             Selection.activeGameObject = go;
@@ -42,7 +37,7 @@ namespace LedShow.Editor
         // whatever was last displayed lit up on the real wall. This sends one
         // explicit all-black frame to every universe of every controller so
         // the shared wall is left clean for the next group.
-        [MenuItem("LED Show/Send Blackout To Wall")]
+        [MenuItem("LED/Send Blackout To Wall")]
         public static void SendBlackout()
         {
             byte[] blackUniverse = new byte[ArtNetPacket.MaxDmxLength]; // zero-initialized
@@ -58,7 +53,10 @@ namespace LedShow.Editor
                 }
             }
 
-            Debug.Log("Blackout envoye : 128 univers a 0 sur les 4 controleurs.");
+            // Lyres + projecteur (univers 33 sur 192.168.1.48).
+            SkiShowLighting.SendBlackout();
+
+            Debug.Log("Blackout envoye : 128 univers mur (0-31 x4) + univers 33 (lyres/statique).");
         }
     }
 }

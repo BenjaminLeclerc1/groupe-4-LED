@@ -1,14 +1,24 @@
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using LedShow.Authoring;
 using LedShow.Routing;
+using LedShow.LED;
 
 namespace LedShow.Editor
 {
     public static class LedWallConnectMenu
     {
-        [MenuItem("LED Show/Connect Ski Game To Real Wall")]
+        [MenuItem("LED/Connect Ski Game To Real Wall")]
         public static void ConnectSkiGameToRealWall()
+        {
+            WireShowPipeline(markSceneDirty: true, selectRouter: true);
+        }
+
+        /// <summary>
+        /// Crée / branche Bridge + Router + SkiShowLighting dans la scène active.
+        /// </summary>
+        public static void WireShowPipeline(bool markSceneDirty, bool selectRouter)
         {
             LEDWallBootstrap.EnsureWallExists();
 
@@ -27,9 +37,8 @@ namespace LedShow.Editor
                 Undo.RegisterCreatedObjectUndo(bridgeGo, "Create LED Wall Bridge");
             }
 
-            var serializedBridge = new SerializedObject(bridge);
-            serializedBridge.FindProperty("wallSimulator").objectReferenceValue = wallSimulator;
-            serializedBridge.ApplyModifiedProperties();
+            bridge.SetWallSimulator(wallSimulator);
+            EditorUtility.SetDirty(bridge);
 
             var router = Object.FindAnyObjectByType<LedWallArtNetRouter>();
             if (router == null)
@@ -41,13 +50,31 @@ namespace LedShow.Editor
 
             router.SetStateSource(bridge);
             EditorUtility.SetDirty(router);
-            EditorUtility.SetDirty(bridge);
 
-            Selection.activeGameObject = router.gameObject;
+            var lighting = Object.FindAnyObjectByType<SkiShowLighting>();
+            if (lighting == null)
+            {
+                var lightingGo = new GameObject("Ski Show Lighting");
+                lighting = lightingGo.AddComponent<SkiShowLighting>();
+                Undo.RegisterCreatedObjectUndo(lightingGo, "Create Ski Show Lighting");
+            }
+
+            EditorUtility.SetDirty(lighting);
+
+            if (markSceneDirty && !Application.isPlaying)
+            {
+                var scene = wallSimulator.gameObject.scene;
+                if (scene.IsValid())
+                    EditorSceneManager.MarkSceneDirty(scene);
+            }
+
+            if (selectRouter)
+                Selection.activeGameObject = router.gameObject;
+
             Debug.Log(
                 "Pipeline Art-Net branche : Ski → Bridge → LED Wall Router → " +
                 string.Join(", ", LedWallLayout.ControllerIps) +
-                ". Lance Play. Ton PC doit etre sur le reseau 192.168.1.x.",
+                " + Ski Show Lighting (u33). Lance Play. PC sur 192.168.1.x.",
                 router);
         }
     }

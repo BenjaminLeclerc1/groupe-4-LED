@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using LedShow.LED;
 
 public struct LEDWallBuildResult
 {

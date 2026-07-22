@@ -1,6 +1,9 @@
-public enum SkiObstacleType
+namespace LedShow.LED
 {
-    Rock = 0,
-    Sapin = 1,
-    Piaf = 2
+    public enum SkiObstacleType
+    {
+        Rock = 0,
+        Sapin = 1,
+        Piaf = 2
+    }
 }

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using LedShow.LED;
 
 [ExecuteAlways]
 [DisallowMultipleComponent]
@@ -122,14 +123,16 @@ public class LEDWallSimulator : MonoBehaviour
         if (wallPanel == null)
             return;
 
-        wallPanel.enabled = show3DWallPanel;
+        if (wallPanel.enabled != show3DWallPanel)
+            wallPanel.enabled = show3DWallPanel;
         if (!show3DWallPanel)
             return;
 
         var material = GetPanelMaterial();
         LEDWallMaterialUtility.ApplyGridSettings(material, showLedGrid, ledGap);
         LEDWallMaterialUtility.ApplyTexture(material, texture);
-        wallPanel.sharedMaterial = material;
+        if (wallPanel.sharedMaterial != material)
+            wallPanel.sharedMaterial = material;
     }
 
     void UpdateUiPreview(Texture2D texture)
@@ -137,22 +140,26 @@ public class LEDWallSimulator : MonoBehaviour
         if (uiPreview == null)
             return;
 
-        uiPreview.gameObject.SetActive(showUiOverlay);
+        if (uiPreview.gameObject.activeSelf != showUiOverlay)
+            uiPreview.gameObject.SetActive(showUiOverlay);
         if (!showUiOverlay)
             return;
 
-        uiPreview.texture = texture;
+        if (uiPreview.texture != texture)
+            uiPreview.texture = texture;
 
         if (!showLedGrid)
         {
-            uiPreview.material = null;
+            if (uiPreview.material != null)
+                uiPreview.material = null;
             return;
         }
 
         var material = GetUiMaterial();
         LEDWallMaterialUtility.ApplyGridSettings(material, true, ledGap);
         LEDWallMaterialUtility.ApplyTexture(material, texture);
-        uiPreview.material = material;
+        if (uiPreview.material != material)
+            uiPreview.material = material;
     }
 
     Material GetPanelMaterial()

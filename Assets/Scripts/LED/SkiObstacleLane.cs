@@ -1,5 +1,8 @@
-public enum SkiObstacleLane
+namespace LedShow.LED
 {
-    Ground = 0,
-    Air = 1
+    public enum SkiObstacleLane
+    {
+        Ground = 0,
+        Air = 1
+    }
 }

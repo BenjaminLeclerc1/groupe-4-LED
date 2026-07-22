@@ -1,5 +1,7 @@
 namespace LedShow.Routing
 {
+    using LedShow.Core;
+
     // Encodes the physical wiring of the GroupeLaps 128x128 LED wall: 64
     // vertical strips, each snaking up one column and down the next. A strip
     // has 259 physical LED positions (3 of them are invisible mounting points,
@@ -16,8 +18,8 @@ namespace LedShow.Routing
     // = 64 strips; each controller therefore owns 32 local universes (0-31).
     public static class LedWallLayout
     {
-        public const int Width = 128;
-        public const int Height = 128;
+        public const int Width = LedNetworkConfig.WallWidth;
+        public const int Height = LedNetworkConfig.WallHeight;
 
         public const int StripCount = 64;
         public const int StripLength = 259;
@@ -26,13 +28,7 @@ namespace LedShow.Routing
         public const int StripsPerController = 16;
         public const int UniversesPerController = StripsPerController * UniversesPerStrip; // 32
 
-        public static readonly string[] ControllerIps =
-        {
-            "192.168.1.45",
-            "192.168.1.46",
-            "192.168.1.47",
-            "192.168.1.48",
-        };
+        public static string[] ControllerIps => LedNetworkConfig.ControllerIps;
 
         public readonly struct LedAddress
         {

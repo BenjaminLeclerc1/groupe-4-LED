@@ -44,15 +44,12 @@ MonoBehaviour:
   - timeSeconds: 14.59451
     type: 0
     lane: 0
-  - timeSeconds: 16.1
+  - timeSeconds: 15.8
     type: 2
     lane: 1
   - timeSeconds: 17.195147
     type: 0
     lane: 0
-  - timeSeconds: 18.2
-    type: 2
-    lane: 1
   - timeSeconds: 20.3
     type: 1
     lane: 0
